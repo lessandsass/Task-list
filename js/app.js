@@ -1,12 +1,21 @@
+let bus = new Vue()
+
 let Task = {
     props: ['task'],
     template: `
-        <div class="task">
+        <div class="task" :class="{ 'task--done': task.done }">
 
             {{ task.body }}
 
+            <a href="#" @click.prevent="toggleDone(task.id)">Mark as {{ task.done ? 'not done' : 'done' }}</a>
+
         </div>
-    `
+    `,
+    methods: {
+        toggleDone (taskId) {
+            bus.$emit('task:toggleDone', taskId)
+        }
+    }
 }
 
 let Tasks = {
@@ -17,7 +26,7 @@ let Tasks = {
         return {
             tasks: [
 
-                { id: 1, body: 'Task one', done: false },
+                { id: 1, body: 'Task one', done: true },
                 { id: 2, body: 'Task two', done: false }
 
             ]
@@ -34,7 +43,22 @@ let Tasks = {
             </div>
 
         </div>
-    `
+    `,
+    methods: {
+        toggleDone (taskId) {
+
+            let tasks = this.tasks.find((task) => {
+                return task.id === taskId
+            })
+
+            console.log(task);
+        }
+    },
+    mounted () {
+        bus.$on('task:toggleDone', (taskId) => {
+            this.toggleDone(taskId)
+        })
+    }
 }
 
 let app = new Vue({

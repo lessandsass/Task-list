@@ -9,27 +9,57 @@ let Task = {
 
             <a href="#" @click.prevent="toggleDone(task.id)">Mark as {{ task.done ? 'not done' : 'done' }}</a>
 
+            <a href="#" @click.prevent="deleteTask(task.id)">Delete</a>
+
         </div>
     `,
     methods: {
         toggleDone (taskId) {
             bus.$emit('task:toggleDone', taskId)
+        },
+        deleteTask (taskId) {
+            bus.$emit('task:deleted', taskId)
+        }
+    }
+}
+
+let TaskForm = {
+    data () {
+        return {
+            body: null
+        }
+    },
+    template: `
+        <form action="#" @submit.prevent="addTask">
+            <input type="text" v-model.trim="body">
+            <button>Add task</button>
+        </form>
+    `,
+    methods: {
+        addTask () {
+            if (!this.body) {
+                return
+            }
+
+            this.$emit('task:added', {
+                id: Date.now(),
+                body: this.body,
+                done: false
+            })
+
+            this.body = null
         }
     }
 }
 
 let Tasks = {
     components: {
-        'task': Task
+        'task': Task,
+        'task-form': TaskForm
     },
     data () {
         return {
-            tasks: [
-
-                { id: 1, body: 'Task one', done: true },
-                { id: 2, body: 'Task two', done: false }
-
-            ]
+            tasks: []
         }
     },
     template: `
@@ -42,22 +72,41 @@ let Tasks = {
                 <span v-else>No tasks</span>
             </div>
 
+            <task-form v-on:task:added="addTask">
+
+            </task-form>
+
         </div>
     `,
     methods: {
         toggleDone (taskId) {
 
-            let tasks = this.tasks.find((task) => {
+            let task = this.tasks.find((task) => {
                 return task.id === taskId
             })
 
-            console.log(task);
+            task.done = !task.done
+        },
+
+        deleteTask (taskId) {
+            this.tasks = this.tasks.filter((task) => {
+                return task.id !== taskId
+            })
+        },
+        addTask (task) {
+            this.tasks.unshift(task)
         }
     },
     mounted () {
+
         bus.$on('task:toggleDone', (taskId) => {
             this.toggleDone(taskId)
         })
+
+        bus.$on('task:deleted', (taskId) => {
+            this.deleteTask(taskId)
+        })
+
     }
 }
 
